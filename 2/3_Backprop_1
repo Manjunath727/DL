@@ -26,13 +26,26 @@
     },
     {
       "metadata": {
+        "id": "DFt-qd0WMc6T",
+        "colab_type": "code",
+        "colab": {}
+      },
+      "cell_type": "code",
+      "source": [
+        ""
+      ],
+      "execution_count": 0,
+      "outputs": []
+    },
+    {
+      "metadata": {
         "id": "jtqb8HjKtoJZ",
         "colab_type": "code",
+        "outputId": "6e66a8a7-85b8-4417-ecd8-ee24f2a05183",
         "colab": {
           "base_uri": "https://localhost:8080/",
-          "height": 153
-        },
-        "outputId": "0b48b285-9b39-483c-da32-30f8d1234b4c"
+          "height": 255
+        }
       },
       "cell_type": "code",
       "source": [
@@ -75,26 +88,71 @@
         "    print('Loss #' + str(sess.run(loss, feed_dict={x_data:rand_x, y_target:rand_y})))\n",
         "  \n",
         " \n",
-        "\n",
-        "    \n",
-        "    \n",
         "   \n",
-        "     \n",
-        "     "
+        "# Reset the graph     \n",
+        "from tensorflow.python.framework import ops\n",
+        "ops.reset_default_graph()\n",
+        "sess = tf.Session()\n",
+        "\n",
+        "# Data from two different normal distributions\n",
+        "x_vals = np.concatenate((np.random.normal(-1, 1, 50), np.random.normal(3,1,50)))\n",
+        "y_vals = np.concatenate((np.repeat(0., 50), np.repeat(1., 50)))\n",
+        "x_data = tf.placeholder(shape=[1], dtype=tf.float32)\n",
+        "y_target = tf.placeholder(shape=[1], dtype=tf.float32)\n",
+        "A = tf.Variable(tf.random_normal(shape=[1], mean = 10))\n",
+        "\n",
+        "# Add translation operation to the graph\n",
+        "my_output = tf.add(x_data, A)\n",
+        "\n",
+        "# Loss functions expects batches of data that have an extra dimension\n",
+        "my_output_expanded = tf.expand_dims(my_output,0)\n",
+        "y_target_expanded = tf.expand_dims(y_target, 0)\n",
+        "\n",
+        "# Initialize our one variable A\n",
+        "init = tf.global_variables_initializer()\n",
+        "sess.run(init)\n",
+        "\n",
+        "# Declare loss fucntion\n",
+        "xentropy = tf.nn.sigmoid_cross_entropy_with_logits(labels = my_output_expanded, logits = y_target_expanded)\n",
+        "# xentropy = tf.nn.sigmoid_cross_entropy_with_logits(labels = my_output, logits = y_target)\n",
+        "\n",
+        "# Add optimizer to the graph\n",
+        "my_opt = tf.train.GradientDescentOptimizer(0.05)\n",
+        "train_step = my_opt.minimize(xentropy)\n",
+        "\n",
+        "# Loop through randomly selected data points\n",
+        "for i in range(1400):\n",
+        "  rand_index = np.random.choice(100)\n",
+        "  rand_x = [x_vals[rand_index]]\n",
+        "  rand_y = [y_vals[rand_index]]\n",
+        "  \n",
+        "  sess.run(train_step, feed_dict={x_data: rand_x, y_target: rand_y})\n",
+        "  \n",
+        "  if (i+1)%200 == 0:\n",
+        "    print('Step #' + str(i+1) + ' A = ' + str(sess.run(A)))\n",
+        "    print('Loss = ' + str(sess.run(xentropy, feed_dict={x_data: rand_x, y_target: rand_y})))\n",
+        "  \n",
+        " \n"
       ],
-      "execution_count": 6,
+      "execution_count": 5,
       "outputs": [
         {
           "output_type": "stream",
           "text": [
-            "Step #25 A = [7.23743]\n",
-            "Loss #[7.5148726]\n",
-            "Step #50 A = [8.945288]\n",
-            "Loss #[2.3367367]\n",
-            "Step #75 A = [9.665263]\n",
-            "Loss #[0.2523362]\n",
-            "Step #100 A = [9.757427]\n",
-            "Loss #[0.00722241]\n"
+            "Step #200 A = [14.336241]\n",
+            "Loss = [[0.6931472]]\n",
+            "Step #400 A = [19.586193]\n",
+            "Loss = [[-20.248999]]\n",
+            "Step #600 A = [24.636116]\n",
+            "Loss = [[0.6931472]]\n",
+            "Step #800 A = [29.286045]\n",
+            "Loss = [[0.6931472]]\n",
+            "Step #1000 A = [34.18597]\n",
+            "Loss = [[0.6931472]]\n",
+            "Step #1200 A = [39.48589]\n",
+            "Loss = [[-39.270145]]\n",
+            "Step #1400 A = [44.63581]\n",
+            "Loss = [[0.6931472]]\n"
           ],
           "name": "stdout"
         }
